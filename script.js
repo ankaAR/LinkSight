@@ -190,7 +190,7 @@ document.getElementById('unitsToggle').addEventListener('click', (e)=>{
 });
 
 /* ====================== MAP ====================== */
-const map = L.map('map', { zoomControl: true }).setView([-34.6037, -58.3816], 13); // Buenos Aires
+const map = L.map('map', { zoomControl: true }).setView([41.8781, -87.6298], 13); // Chicago by default, sorry Buenos Aires, I need this near home :/
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
