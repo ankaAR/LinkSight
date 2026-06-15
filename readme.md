@@ -1,6 +1,6 @@
 # LinkSight
 
-This project was winecoded/matecoded (it is like vibecoding but with wine and mate) by @ankaAR with the help and good energy of likeviny, dgy and TheCoffeeMaker.
+This project was winecoded/matecoded (it is like vibecoding but with wine and mate) by @ankaAR with the help and good energy of likevinyl, dgy and TheCoffeeMaker.
 
 It is just a simple proof of concept that uses open services like OpenStreeetMap, leaFleet, Open Topo Data, Open Elevation and the Overpass API.
 
