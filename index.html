@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkSight — WiFi P2P Line-of-Sight Analysis</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>LinkSight</h1>
+      </div>
+      <small style="margin-left:8px;" data-i18n="tagline">Obstruction analysis · point-to-point WiFi links</small>
+    </div>
+    <div class="right">
+      <div class="hint" data-i18n="mapHint">Click the map to place Site A and Site B</div>
+      <div class="toggle">
+        <span data-i18n="langLabel">LANG</span>
+        <div class="seg" id="langToggle">
+          <button data-value="en" class="active">EN</button>
+          <button data-value="es">ES</button>
+        </div>
+      </div>
+      <div class="toggle">
+        <span data-i18n="unitsLabel">UNITS</span>
+        <div class="seg" id="unitsToggle">
+          <button data-value="metric" class="active">m</button>
+          <button data-value="imperial">ft</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="map"></div>
+
+  <div class="panel">
+    <div class="panel-scroll">
+
+      <div>
+        <div class="section-label" data-i18n="sitesLabel">Link sites</div>
+        <div class="points">
+          <div class="point-row">
+            <div class="marker a">A</div>
+            <div class="point-info">
+              <div class="coords" id="coordsA" data-i18n="notSet">Not set — click the map</div>
+              <div class="label" data-i18n="siteA">Site A · transmitter</div>
+            </div>
+            <div class="height-input">
+              <input type="number" id="heightA" value="10" min="0" step="0.5">
+              <span id="unitLabelA">m</span>
+            </div>
+          </div>
+          <div class="point-row">
+            <div class="marker b">B</div>
+            <div class="point-info">
+              <div class="coords" id="coordsB" data-i18n="notSet">Not set — click the map</div>
+              <div class="label" data-i18n="siteB">Site B · receiver</div>
+            </div>
+            <div class="height-input">
+              <input type="number" id="heightB" value="10" min="0" step="0.5">
+              <span id="unitLabelB">m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructions" data-i18n="instructions1">
+        Heights are the <b>mast/antenna height above the roof or ground</b> at each site.
+        The first click places A, the second places B. Click A or B again (or drag the pins) to move them.
+      </div>
+
+      <div>
+        <div class="section-label" data-i18n="freqLabel">Link frequency</div>
+        <div class="freq-row">
+          <select id="freq">
+            <optgroup label="LoRa / Meshtastic" data-i18n-group="groupLora">
+              <option value="0.433">433 MHz (LoRa EU/AS)</option>
+              <option value="0.868">868 MHz (LoRa EU)</option>
+              <option value="0.915">915 MHz (LoRa US/AU)</option>
+              <option value="2.4" data-i18n="freqLora24">2.4 GHz (LoRa / Meshtastic)</option>
+            </optgroup>
+            <optgroup label="WiFi" data-i18n-group="groupWifi">
+              <option value="2.4">2.4 GHz (WiFi)</option>
+              <option value="5" selected>5 GHz (WiFi)</option>
+              <option value="6">6 GHz (WiFi 6E)</option>
+              <option value="60">60 GHz (WiFi mmWave)</option>
+            </optgroup>
+            <optgroup label="Other" data-i18n-group="groupOther">
+              <option value="0.169">169 MHz (Wireless M-Bus)</option>
+              <option value="0.315">315 MHz (ISM)</option>
+              <option value="3.5">3.5 GHz (CBRS / LTE)</option>
+              <option value="11">11 GHz (licensed microwave)</option>
+              <option value="18">18 GHz (licensed microwave)</option>
+              <option value="24" data-i18n="freq24">24 GHz (license-free)</option>
+              <option value="80">80 GHz (E-band mmWave)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="instructions" style="margin-top:8px;" data-i18n="instructions2">
+          Used to compute the radius of the <b>first Fresnel zone</b>, which needs to be mostly
+          clear of obstacles in addition to the direct line of sight.
+        </div>
+      </div>
+
+      <button class="run" id="runBtn" disabled data-i18n="runBtn">Analyze link</button>
+      <div class="status" id="status"></div>
+
+      <div id="results" style="display:none; display:flex; flex-direction:column; gap:14px;">
+        <div class="section-label" data-i18n="resultLabel">Result</div>
+        <div id="verdict" class="verdict idle"></div>
+
+        <div class="stats">
+          <div class="stat"><div class="v" id="statDist">—</div><div class="l" data-i18n="distance">Distance</div></div>
+          <div class="stat"><div class="v" id="statClear">—</div><div class="l" data-i18n="minClearance">Min. clearance</div></div>
+        </div>
+
+        <canvas id="profile" width="760" height="220"></canvas>
+        <div class="profile-hint" data-i18n="profileHint">Click the chart to enlarge</div>
+
+        <div class="legend">
+          <span><i class="terrain"></i> <span data-i18n="legendTerrain">Terrain</span></span>
+          <span><i class="building"></i> <span data-i18n="legendBuildings">Buildings</span></span>
+          <span><i class="los"></i> <span data-i18n="legendLos">Line of sight OK</span></span>
+          <span><i class="fresnel"></i> <span data-i18n="legendFresnel">Fresnel compromised</span></span>
+          <span><i class="losbad"></i> <span data-i18n="legendBlocked">Blocked</span></span>
+        </div>
+        <div class="instructions" style="margin-top:-4px;" data-i18n="mapColorNote">
+          These same colors are drawn on the link on the map, marking which stretch of the path has issues.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <strong data-i18n="footerSources">Sources of data:</strong>
+    <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+    <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">Leaflet</a>
+    <a href="https://www.opentopodata.org" target="_blank" rel="noopener noreferrer">Open-Topo-Data</a>
+    <a href="https://open-elevation.com" target="_blank" rel="noopener noreferrer">Open-Elevation</a>
+    <a href="https://overpass-api.de" target="_blank" rel="noopener noreferrer">Overpass API</a>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="profileModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="title" data-i18n="profileModalTitle">Link profile</div>
+      <button class="modal-close" id="profileModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <canvas id="profileLarge" width="1600" height="700"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
