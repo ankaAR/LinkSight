@@ -1,0 +1,171 @@
+{
+  "groups": [
+    {
+      "id": "custom",
+      "label_en": "Custom",
+      "label_es": "Personalizado",
+      "equipment": [
+        {
+          "id": "custom",
+          "label_en": "Custom / Manual",
+          "label_es": "Personalizado / Manual",
+          "txPower": 23,
+          "gainA": 10,
+          "gainB": 10,
+          "rxSens": -90,
+          "cable": 1,
+          "freq": null
+        }
+      ]
+    },
+    {
+      "id": "ubiquiti_airmax",
+      "label_en": "Ubiquiti airMAX",
+      "label_es": "Ubiquiti airMAX",
+      "equipment": [
+        {
+          "id": "ubnt_rb5ac",
+          "label_en": "Rocket 5AC Lite (5 GHz)",
+          "label_es": "Rocket 5AC Lite (5 GHz)",
+          "txPower": 25,
+          "gainA": 12,
+          "gainB": 12,
+          "rxSens": -96,
+          "cable": 1,
+          "freq": 5
+        },
+        {
+          "id": "ubnt_lbe5ac",
+          "label_en": "LiteBeam 5AC Gen2 (5 GHz)",
+          "label_es": "LiteBeam 5AC Gen2 (5 GHz)",
+          "txPower": 23,
+          "gainA": 23,
+          "gainB": 23,
+          "rxSens": -96,
+          "cable": 0.5,
+          "freq": 5
+        },
+        {
+          "id": "ubnt_rb_m2",
+          "label_en": "Rocket M2 (2.4 GHz)",
+          "label_es": "Rocket M2 (2.4 GHz)",
+          "txPower": 28,
+          "gainA": 12,
+          "gainB": 12,
+          "rxSens": -94,
+          "cable": 1,
+          "freq": 2.4
+        },
+        {
+          "id": "ubnt_nsm5",
+          "label_en": "NanoStation M5 (5 GHz)",
+          "label_es": "NanoStation M5 (5 GHz)",
+          "txPower": 23,
+          "gainA": 16,
+          "gainB": 16,
+          "rxSens": -96,
+          "cable": 0.5,
+          "freq": 5
+        }
+      ]
+    },
+    {
+      "id": "ubiquiti_airfiber",
+      "label_en": "Ubiquiti airFiber",
+      "label_es": "Ubiquiti airFiber",
+      "equipment": [
+        {
+          "id": "ubnt_af24",
+          "label_en": "airFiber 24 (24 GHz)",
+          "label_es": "airFiber 24 (24 GHz)",
+          "txPower": 24,
+          "gainA": 33,
+          "gainB": 33,
+          "rxSens": -82,
+          "cable": 0.5,
+          "freq": 24
+        },
+        {
+          "id": "ubnt_af60",
+          "label_en": "airFiber 60 (60 GHz)",
+          "label_es": "airFiber 60 (60 GHz)",
+          "txPower": 16,
+          "gainA": 38,
+          "gainB": 38,
+          "rxSens": -66,
+          "cable": 0.5,
+          "freq": 60
+        }
+      ]
+    },
+    {
+      "id": "lora_meshtastic",
+      "label_en": "LoRa / Meshtastic",
+      "label_es": "LoRa / Meshtastic",
+      "equipment": [
+        {
+          "id": "lora_sx1276_915",
+          "label_en": "SX1276 915 MHz (RAK/Heltec)",
+          "label_es": "SX1276 915 MHz (RAK/Heltec)",
+          "txPower": 20,
+          "gainA": 2,
+          "gainB": 2,
+          "rxSens": -134,
+          "cable": 0.5,
+          "freq": 0.915
+        },
+        {
+          "id": "lora_sx1276_868",
+          "label_en": "SX1276 868 MHz (RAK/Heltec)",
+          "label_es": "SX1276 868 MHz (RAK/Heltec)",
+          "txPower": 14,
+          "gainA": 2,
+          "gainB": 2,
+          "rxSens": -134,
+          "cable": 0.5,
+          "freq": 0.868
+        },
+        {
+          "id": "meshtastic_tlora",
+          "label_en": "T-LoRa / TTGO (915 MHz)",
+          "label_es": "T-LoRa / TTGO (915 MHz)",
+          "txPower": 20,
+          "gainA": 2,
+          "gainB": 2,
+          "rxSens": -130,
+          "cable": 0.5,
+          "freq": 0.915
+        }
+      ]
+    },
+    {
+      "id": "mikrotik",
+      "label_en": "Mikrotik",
+      "label_es": "Mikrotik",
+      "equipment": [
+        {
+          "id": "mkt_sxtsq5",
+          "label_en": "SXTsq 5 ac (5 GHz)",
+          "label_es": "SXTsq 5 ac (5 GHz)",
+          "txPower": 23,
+          "gainA": 16,
+          "gainB": 16,
+          "rxSens": -96,
+          "cable": 0.5,
+          "freq": 5
+        },
+        {
+          "id": "mkt_lhg5",
+          "label_en": "LHG 5 (5 GHz)",
+          "label_es": "LHG 5 (5 GHz)",
+          "txPower": 23,
+          "gainA": 24.5,
+          "gainB": 24.5,
+          "rxSens": -96,
+          "cable": 0.5,
+          "freq": 5
+        }
+      ]
+    }
+  ]
+}

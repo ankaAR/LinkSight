@@ -47,7 +47,32 @@ const STRINGS = {
     verdictFresnelTitle: 'Line of sight clear, but Fresnel zone compromised',
     verdictFresnelBody: (freqStr)=>`There's no direct blockage, but an obstacle intrudes into more than 60% of the first Fresnel zone at ${freqStr}, which can cause signal loss from diffraction/interference.`,
     verdictOkTitle: 'Link is clear',
-    verdictOkBody: (freqStr, clr)=>`Direct line of sight is clear and the Fresnel zone is mostly unobstructed at ${freqStr}. Minimum clearance: ${clr}.`
+    verdictOkBody: (freqStr, clr)=>`Direct line of sight is clear and the Fresnel zone is mostly unobstructed at ${freqStr}. Minimum clearance: ${clr}.`,
+    // equipment & link budget
+    equipLabel: 'Radio equipment',
+    equipGroupCustom: 'Custom',
+    equipCustom: 'Custom / Manual',
+    equipGroupUbiquiti: 'Ubiquiti airMAX',
+    equipGroupAirFiber: 'Ubiquiti airFiber',
+    equipGroupLora: 'LoRa / Meshtastic',
+    equipGroupMikrotik: 'Mikrotik',
+    equipTxPower: 'TX Power',
+    equipGainA: 'Antenna gain A',
+    equipGainB: 'Antenna gain B',
+    equipRxSens: 'RX sensitivity',
+    equipCableLoss: 'Cable losses',
+    rfLabel: 'RF / Link budget',
+    budgetMargin: 'Margin',
+    budgetFspl: 'Free-space path loss',
+    budgetTxPower: 'TX Power',
+    budgetGains: 'Total antenna gain',
+    budgetCable: 'Cable/connector losses',
+    budgetRxSens: 'RX sensitivity',
+    budgetRxSignal: 'Estimated RX signal',
+    budgetTotal: 'Link margin',
+    budgetGoodLabel: 'Excellent link',
+    budgetWarnLabel: 'Marginal link',
+    budgetBadLabel: 'Link insufficient',
   },
   es: {
     tagline: 'Análisis de obstrucción · enlaces WiFi punto a punto',
@@ -96,7 +121,32 @@ const STRINGS = {
     verdictFresnelTitle: 'Línea de visión libre, pero zona de Fresnel comprometida',
     verdictFresnelBody: (freqStr)=>`No hay bloqueo directo, pero un obstáculo invade más del 60% de la primera zona de Fresnel a ${freqStr}, lo que puede causar pérdida de señal por difracción/interferencia.`,
     verdictOkTitle: 'Enlace despejado',
-    verdictOkBody: (freqStr, clr)=>`Línea de visión directa libre y zona de Fresnel mayormente sin obstrucciones a ${freqStr}. Despeje mínimo: ${clr}.`
+    verdictOkBody: (freqStr, clr)=>`Línea de visión directa libre y zona de Fresnel mayormente sin obstrucciones a ${freqStr}. Despeje mínimo: ${clr}.`,
+    // equipment & link budget
+    equipLabel: 'Equipo de radio',
+    equipGroupCustom: 'Personalizado',
+    equipCustom: 'Personalizado / Manual',
+    equipGroupUbiquiti: 'Ubiquiti airMAX',
+    equipGroupAirFiber: 'Ubiquiti airFiber',
+    equipGroupLora: 'LoRa / Meshtastic',
+    equipGroupMikrotik: 'Mikrotik',
+    equipTxPower: 'Potencia TX',
+    equipGainA: 'Ganancia antena A',
+    equipGainB: 'Ganancia antena B',
+    equipRxSens: 'Sensibilidad RX',
+    equipCableLoss: 'Pérdida cables',
+    rfLabel: 'RF / Presupuesto de enlace',
+    budgetMargin: 'Margen',
+    budgetFspl: 'Pérdida en espacio libre',
+    budgetTxPower: 'Potencia TX',
+    budgetGains: 'Ganancia total de antenas',
+    budgetCable: 'Pérdida de cables/conectores',
+    budgetRxSens: 'Sensibilidad RX',
+    budgetRxSignal: 'Señal RX estimada',
+    budgetTotal: 'Margen del enlace',
+    budgetGoodLabel: 'Enlace excelente',
+    budgetWarnLabel: 'Enlace marginal',
+    budgetBadLabel: 'Enlace insuficiente',
   }
 };
 
@@ -217,6 +267,133 @@ function inputHeightToMeters(value){
   return currentUnits === 'metric' ? v : v / M_TO_FT;
 }
 
+/* ====================== RADIO EQUIPMENT DATABASE ====================== */
+// Equipment data is loaded from data/equipment.json at startup.
+// EQUIPMENT_DB is populated after fetch; keyed by equipment id.
+let EQUIPMENT_GROUPS = []; // raw groups data, kept for i18n rebuilds
+let EQUIPMENT_DB = {};     // flat map keyed by equipment id, populated after fetch
+
+async function loadEquipmentData(){
+  try {
+    const res = await fetch('data/equipment.json');
+    if(!res.ok) throw new Error('Could not load equipment data: ' + res.status);
+    const data = await res.json();
+    EQUIPMENT_GROUPS = data.groups;
+    buildEquipSelect();
+  } catch(err){
+    console.warn('Equipment data unavailable, select will be empty.', err);
+  }
+}
+
+function buildEquipSelect(){
+  const sel = document.getElementById('equipSelect');
+  const prevVal = sel.value || null;
+  sel.innerHTML = '';
+
+  EQUIPMENT_GROUPS.forEach(group => {
+    const og = document.createElement('optgroup');
+    og.label = currentLang === 'es' ? group.label_es : group.label_en;
+
+    group.equipment.forEach(eq => {
+      EQUIPMENT_DB[eq.id] = eq; // populate lookup map
+      const opt = document.createElement('option');
+      opt.value = eq.id;
+      opt.textContent = currentLang === 'es' ? eq.label_es : eq.label_en;
+      og.appendChild(opt);
+    });
+
+    sel.appendChild(og);
+  });
+
+  // restore previous selection or default to first option
+  if(prevVal && EQUIPMENT_DB[prevVal]){
+    sel.value = prevVal;
+  } else {
+    const firstId = sel.options[0]?.value;
+    if(firstId) loadEquipPreset(firstId);
+  }
+}
+
+function loadEquipPreset(id){
+  const preset = EQUIPMENT_DB[id];
+  if(!preset) return;
+  document.getElementById('equipTxPower').value   = preset.txPower;
+  document.getElementById('equipGainA').value     = preset.gainA;
+  document.getElementById('equipGainB').value     = preset.gainB;
+  document.getElementById('equipRxSens').value    = preset.rxSens;
+  document.getElementById('equipCableLoss').value = preset.cable;
+  if(preset.freq !== null){
+    const freqSel = document.getElementById('freq');
+    const opt = Array.from(freqSel.options).find(o => parseFloat(o.value) === preset.freq);
+    if(opt) freqSel.value = opt.value;
+  }
+}
+
+document.getElementById('equipSelect').addEventListener('change', (e)=>{
+  loadEquipPreset(e.target.value);
+});
+
+/* ====================== LINK BUDGET ====================== */
+// Free-Space Path Loss (dB): FSPL = 20*log10(d_km) + 20*log10(f_ghz) + 92.45
+function calcFSPL(distanceMeters, freq_ghz){
+  const d_km = distanceMeters / 1000;
+  if(d_km <= 0) return 0;
+  return 20 * Math.log10(d_km) + 20 * Math.log10(freq_ghz) + 92.45;
+}
+
+function getEquipParams(){
+  return {
+    txPower:   parseFloat(document.getElementById('equipTxPower').value)  || 0,
+    gainA:     parseFloat(document.getElementById('equipGainA').value)    || 0,
+    gainB:     parseFloat(document.getElementById('equipGainB').value)    || 0,
+    rxSens:    parseFloat(document.getElementById('equipRxSens').value)   || -90,
+    cableLoss: parseFloat(document.getElementById('equipCableLoss').value) || 0,
+  };
+}
+
+function calcLinkBudget(distanceMeters, freq_ghz){
+  const p = getEquipParams();
+  const fspl        = calcFSPL(distanceMeters, freq_ghz);
+  const totalGain   = p.gainA + p.gainB;
+  const rxSignal    = p.txPower + totalGain - fspl - p.cableLoss;
+  const margin      = rxSignal - p.rxSens;
+  return { fspl, txPower: p.txPower, totalGain, cableLoss: p.cableLoss, rxSens: p.rxSens, rxSignal, margin };
+}
+
+function renderLinkBudget(budget){
+  // bar: margin mapped 0–30 dB → 0–100%, color by threshold
+  const pct    = Math.max(0, Math.min(100, (budget.margin / 30) * 100));
+  const color  = budget.margin >= 15 ? '#5be7c4' : budget.margin >= 6 ? '#ffd166' : '#ff6a5b';
+  const cls    = budget.margin >= 15 ? 'good'    : budget.margin >= 6 ? 'warn'    : 'bad';
+  const label  = budget.margin >= 15 ? t('budgetGoodLabel') : budget.margin >= 6 ? t('budgetWarnLabel') : t('budgetBadLabel');
+
+  document.getElementById('budgetBarFill').style.width      = pct + '%';
+  document.getElementById('budgetBarFill').style.background = color;
+  document.getElementById('budgetBarLabel').textContent     = label;
+
+  const marginEl = document.getElementById('budgetMarginVal');
+  marginEl.textContent  = (budget.margin >= 0 ? '+' : '') + budget.margin.toFixed(1) + ' dB';
+  marginEl.className    = 'budget-margin-val ' + cls;
+
+  const rows = [
+    { key: 'budgetTxPower',  val: '+' + budget.txPower.toFixed(1) + ' dBm', cls: 'pos' },
+    { key: 'budgetGains',    val: '+' + budget.totalGain.toFixed(1) + ' dBi', cls: 'pos' },
+    { key: 'budgetFspl',     val: '−' + budget.fspl.toFixed(1) + ' dB',  cls: 'neg' },
+    { key: 'budgetCable',    val: '−' + budget.cableLoss.toFixed(1) + ' dB', cls: 'neg' },
+    { key: 'budgetRxSignal', val: budget.rxSignal.toFixed(1) + ' dBm', cls: '' },
+    { key: 'budgetRxSens',   val: budget.rxSens.toFixed(1) + ' dBm', cls: '' },
+    { key: 'budgetTotal',    val: (budget.margin >= 0 ? '+' : '') + budget.margin.toFixed(1) + ' dB',
+      cls: cls === 'good' ? 'pos' : cls === 'bad' ? 'neg' : '', total: true },
+  ];
+
+  document.getElementById('budgetRows').innerHTML = rows.map(r =>
+    `<div class="budget-row${r.total ? ' total' : ''}">
+      <span class="bk">${t(r.key)}</span>
+      <span class="bv ${r.cls}">${r.val}</span>
+    </div>`
+  ).join('');
+}
+
 /* ====================== TOGGLES ====================== */
 document.getElementById('langToggle').addEventListener('click', (e)=>{
   const btn = e.target.closest('button');
@@ -224,6 +401,7 @@ document.getElementById('langToggle').addEventListener('click', (e)=>{
   currentLang = btn.dataset.value;
   document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('active', b===btn));
   applyI18n();
+  buildEquipSelect(); // rebuild select labels for new language
   redrawAllProfiles();
 });
 
@@ -581,6 +759,10 @@ async function runAnalysis(){
       verdict.innerHTML = `<div class="icon">✅</div><div><b>${t('verdictOkTitle')}</b>${t('verdictOkBody', freqStr, clearanceStr)}</div>`;
     }
 
+    // link budget
+    const budget = calcLinkBudget(distance, freq);
+    renderLinkBudget(budget);
+
     document.getElementById('results').style.display = 'flex';
     statusEl.textContent = t('statusDone', N, buildings.length);
 
@@ -796,3 +978,4 @@ window.addEventListener('resize', ()=>{
 
 /* ====================== INIT ====================== */
 updateApiUsageDisplay();
+loadEquipmentData();

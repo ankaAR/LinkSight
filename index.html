@@ -107,6 +107,35 @@
         </div>
       </div>
 
+      <div>
+        <div class="section-label" data-i18n="equipLabel">Radio equipment</div>
+        <div class="freq-row" style="margin-bottom:8px;">
+          <select id="equipSelect"></select>
+        </div>
+        <div class="equip-params" id="equipParams">
+          <div class="equip-row">
+            <label data-i18n="equipTxPower">TX Power</label>
+            <input type="number" id="equipTxPower" value="23" step="1"> <span>dBm</span>
+          </div>
+          <div class="equip-row">
+            <label data-i18n="equipGainA">Antenna gain A</label>
+            <input type="number" id="equipGainA" value="10" step="0.5"> <span>dBi</span>
+          </div>
+          <div class="equip-row">
+            <label data-i18n="equipGainB">Antenna gain B</label>
+            <input type="number" id="equipGainB" value="10" step="0.5"> <span>dBi</span>
+          </div>
+          <div class="equip-row">
+            <label data-i18n="equipRxSens">RX sensitivity</label>
+            <input type="number" id="equipRxSens" value="-90" step="1"> <span>dBm</span>
+          </div>
+          <div class="equip-row">
+            <label data-i18n="equipCableLoss">Cable losses</label>
+            <input type="number" id="equipCableLoss" value="1" step="0.5"> <span>dB</span>
+          </div>
+        </div>
+      </div>
+
       <button class="run" id="runBtn" disabled data-i18n="runBtn">Analyze link</button>
       <div class="status" id="status"></div>
 
@@ -117,6 +146,21 @@
         <div class="stats">
           <div class="stat"><div class="v" id="statDist">—</div><div class="l" data-i18n="distance">Distance</div></div>
           <div class="stat"><div class="v" id="statClear">—</div><div class="l" data-i18n="minClearance">Min. clearance</div></div>
+        </div>
+
+        <div class="section-label" data-i18n="rfLabel">RF / Link budget</div>
+        <div id="linkBudgetBlock">
+          <div class="budget-bar-wrap">
+            <div class="budget-bar-track">
+              <div class="budget-bar-fill" id="budgetBarFill"></div>
+              <div class="budget-bar-label" id="budgetBarLabel"></div>
+            </div>
+            <div class="budget-bar-legend">
+              <span data-i18n="budgetMargin">Margin</span>
+              <span id="budgetMarginVal" class="budget-margin-val">—</span>
+            </div>
+          </div>
+          <div class="budget-rows" id="budgetRows"></div>
         </div>
 
         <canvas id="profile" width="760" height="220"></canvas>
