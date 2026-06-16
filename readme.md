@@ -9,3 +9,5 @@ I have a lot of things to solve, like the mobile view of the graph, or the API c
 Probably I will solve some things then refactor the code to something.., better than just javascript and HTML.
 
 A search bar could come, some filters and information about some antenas already deployed could come also.., but this will depend on the help I can get and the time I can dedicate for this.
+
+well, I added some antenas but the selector is not working in github, so, bad luck but start your own server and enjoy or.., no.
