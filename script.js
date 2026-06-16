@@ -27,10 +27,6 @@ const STRINGS = {
     legendFresnel: 'Fresnel compromised',
     legendBlocked: 'Blocked',
     footerSources: 'Sources of data:',
-    apiUsageLabel: 'API calls today:',
-    apiUsageElevationUnit: 'elevation',
-    apiUsageOverpassUnit: 'buildings',
-    apiUsageTooltip: 'Number of requests sent to the elevation and building-data APIs today. Public demo servers have daily limits (Open-Topo-Data: ~1000/day).',
     mapColorNote: 'These same colors are drawn on the link on the map, marking which stretch of the path has issues.',
     profileHint: 'Click the chart to enlarge',
     profileModalTitle: 'Link profile',
@@ -76,10 +72,6 @@ const STRINGS = {
     legendFresnel: 'Fresnel comprometida',
     legendBlocked: 'Obstruida',
     footerSources: 'Fuentes consultadas:',
-    apiUsageLabel: 'Llamadas a API hoy:',
-    apiUsageElevationUnit: 'elevación',
-    apiUsageOverpassUnit: 'edificios',
-    apiUsageTooltip: 'Cantidad de solicitudes enviadas hoy a las APIs de elevación y edificios. Los servidores públicos de demo tienen límites diarios (Open-Topo-Data: ~1000/día).',
     mapColorNote: 'Estos mismos colores se pintan sobre el enlace en el mapa, marcando qué tramo del trayecto tiene problemas.',
     profileHint: 'Hacé clic en el gráfico para ampliarlo',
     profileModalTitle: 'Perfil del enlace',
@@ -120,11 +112,6 @@ function applyI18n(){
     const val = STRINGS[currentLang][key];
     if(typeof val === 'string') el.label = val;
   });
-  document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const val = STRINGS[currentLang][key];
-    if(typeof val === 'string') el.title = val;
-  });
   document.title = currentLang === 'es'
     ? 'LinkSight — Análisis de línea de visión WiFi P2P'
     : 'LinkSight — WiFi P2P Line-of-Sight Analysis';
@@ -140,58 +127,6 @@ function updateHeightUnitLabels(){
   const label = currentUnits === 'metric' ? 'm' : 'ft';
   document.getElementById('unitLabelA').textContent = label;
   document.getElementById('unitLabelB').textContent = label;
-}
-
-/* ====================== API USAGE COUNTER ====================== */
-// Tracks how many requests are sent to the elevation and Overpass APIs,
-// reset daily, persisted in localStorage so it survives page reloads.
-const API_USAGE_KEY = 'linksight_api_usage';
-
-function todayKey(){
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
-function loadApiUsage(){
-  try {
-    const raw = localStorage.getItem(API_USAGE_KEY);
-    if(!raw) return { date: todayKey(), elevation: 0, overpass: 0 };
-    const parsed = JSON.parse(raw);
-    if(parsed.date !== todayKey()){
-      // new day, reset counters
-      return { date: todayKey(), elevation: 0, overpass: 0 };
-    }
-    return parsed;
-  } catch(e){
-    return { date: todayKey(), elevation: 0, overpass: 0 };
-  }
-}
-
-let apiUsage = loadApiUsage();
-
-function saveApiUsage(){
-  try {
-    localStorage.setItem(API_USAGE_KEY, JSON.stringify(apiUsage));
-  } catch(e){
-    console.warn('Could not persist API usage counter', e);
-  }
-}
-
-function recordApiCall(kind){
-  // kind: 'elevation' | 'overpass'
-  if(apiUsage.date !== todayKey()){
-    apiUsage = { date: todayKey(), elevation: 0, overpass: 0 };
-  }
-  apiUsage[kind] = (apiUsage[kind] || 0) + 1;
-  saveApiUsage();
-  updateApiUsageDisplay();
-}
-
-function updateApiUsageDisplay(){
-  const elevEl = document.getElementById('apiUsageElevation');
-  const overEl = document.getElementById('apiUsageOverpass');
-  if(elevEl) elevEl.textContent = apiUsage.elevation || 0;
-  if(overEl) overEl.textContent = apiUsage.overpass || 0;
 }
 
 /* ====================== UNIT CONVERSION ====================== */
@@ -255,24 +190,7 @@ document.getElementById('unitsToggle').addEventListener('click', (e)=>{
 });
 
 /* ====================== MAP ====================== */
-const CHICAGO = { lat: 41.8781, lng: -87.6298 };
-const DEFAULT_ZOOM = 13;
-
-const map = L.map('map', { zoomControl: true }).setView([CHICAGO.lat, CHICAGO.lng], DEFAULT_ZOOM);
-
-// try to center on the user's actual location; fall back to Chicago if denied/unavailable
-if(navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      map.setView([pos.coords.latitude, pos.coords.longitude], DEFAULT_ZOOM);
-    },
-    (err) => {
-      console.warn('Geolocation unavailable, defaulting to Chicago', err);
-    },
-    { timeout: 8000, maximumAge: 5 * 60 * 1000 }
-  );
-}
-
+const map = L.map('map', { zoomControl: true }).setView([41.8781, -87.6298], 13); // Chicago by default, sorry Buenos Aires, I need this near home :/
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
@@ -365,7 +283,6 @@ async function fetchElevations(points){
   const url = 'https://api.opentopodata.org/v1/srtm30m?locations=' + encodeURIComponent(locStr);
 
   try {
-    recordApiCall('elevation');
     const res = await fetch(url);
     if(!res.ok) throw new Error('Open-Topo-Data returned ' + res.status);
     const data = await res.json();
@@ -374,7 +291,6 @@ async function fetchElevations(points){
   } catch(errPrimary){
     console.warn('Open-Topo-Data failed, trying Open-Elevation...', errPrimary);
     try {
-      recordApiCall('elevation');
       const body = { locations: points.map(p => ({ latitude: p.lat, longitude: p.lng })) };
       const res2 = await fetch('https://api.open-elevation.com/api/v1/lookup', {
         method: 'POST',
@@ -410,7 +326,6 @@ async function fetchBuildings(p1, p2){
     method: 'POST',
     body: 'data=' + encodeURIComponent(query)
   });
-  recordApiCall('overpass');
   if(!res.ok) throw new Error('Overpass returned ' + res.status);
   const data = await res.json();
 
@@ -793,6 +708,3 @@ window.addEventListener('resize', ()=>{
     drawProfile(profileLargeCanvas, lastProfile, lastDistance);
   }
 });
-
-/* ====================== INIT ====================== */
-updateApiUsageDisplay();

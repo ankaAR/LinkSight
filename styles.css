@@ -287,21 +287,6 @@ button.run:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
   text-decoration: underline;
 }
 
-.footer-spacer{
-  flex: 1;
-}
-
-.api-usage{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono);
-}
-
-.api-usage .api-usage-sep{
-  opacity: .5;
-}
-
 /* leaflet marker tweaks */
 .leaflet-container{ font-family: var(--sans); }
 
@@ -311,5 +296,4 @@ button.run:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
   .panel{ border-left:none; border-top:1px solid var(--line); }
   header{ flex-wrap:wrap; height:auto; padding:10px 14px; }
   header .hint{ display:none; }
-  .footer-spacer{ display:none; }
 }
